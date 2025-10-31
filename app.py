@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from statsmodels.tsa.seasonal import seasonal_decompose
-# import calendar # This import is not used, so we can remove it.
+import calendar
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
@@ -16,6 +16,7 @@ st.set_page_config(
 
 # --- 2. CUSTOM CSS (The "Wow" Factor) ---
 # This injects custom CSS to brand your app with Ugunja's colors
+# and create a modern, clean look.
 st.markdown(
     """
     <style>
@@ -24,15 +25,17 @@ st.markdown(
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* --- DEFINE BRAND COLORS (UGUNJA ORANGE) --- */
+    /* --- CUSTOM BRAND COLORS (UGUNJA ORANGE) --- */
     :root {
         --primary-color: #FFA500; /* Ugunja Orange */
         --background-color: #0E1117; /* Streamlit Dark BG */
         --secondary-background-color: #1a1f2b; /* Card BG */
         --text-color: #FAFAFA;
+        --dark-grey: #333333;
     }
 
     /* --- APPLY BRAND COLOR TO WIDGETS --- */
+    
     /* Slider Track */
     div[data-baseweb="slider"] > div:nth-child(2) > div {
         background: var(--primary-color) !important;
@@ -53,18 +56,24 @@ st.markdown(
         font-weight: 700;
         color: var(--primary-color); /* Make the metric value ORANGE */
     }
+    
     div[data-testid="stMetricLabel"] {
         font-size: 1.1rem;
         font-weight: 400;
+        color: var(--text-color);
     }
     
-    /* --- MODERN "CARD" LAYOUT --- */
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: var(--secondary-background-color);
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    div[data-testid="stMetricDelta"] {
+        font-size: 1rem !important;
+    }
+
+    /* --- STYLE SIDEBAR --- */
+    [data-testid="stSidebar"] {
+        background-color: #141820; /* Slightly different dark for sidebar */
+    }
+    [data-testid="stSidebar"] .st-emotion-cache-16txtl3 { /* Sidebar radio labels */
+        font-size: 1.1rem;
+        font-weight: 500;
     }
     
     /* --- STYLE TABS --- */
@@ -74,16 +83,7 @@ st.markdown(
     }
     button[data-baseweb="tab"][aria-selected="true"] {
         color: var(--primary-color);
-        border-bottom: 2px solid var(--primary-color);
-    }
-    
-    /* --- STYLE SIDEBAR --- */
-    [data-testid="stSidebar"] {
-        background-color: #141820; /* Slightly different dark for sidebar */
-    }
-    [data-testid="stSidebar"] .st-emotion-cache-16txtl3 { /* Sidebar radio labels */
-        font-size: 1.1rem;
-        font-weight: 500;
+        border-bottom-color: var(--primary-color);
     }
     </style>
     """,
@@ -95,7 +95,6 @@ st.markdown(
 @st.cache_data
 def load_data():
     try:
-        # Using the ./data/ path as specified in your code
         demand_df = pd.read_csv('./data/demand_forecasting.csv')
         maintenance_df = pd.read_csv('./data/predictive_maintenance.csv')
         route_df = pd.read_csv('./data/route_optimization.csv')
@@ -105,7 +104,7 @@ def load_data():
         
         return demand_df, maintenance_df, route_df
     except FileNotFoundError:
-        st.error("FATAL ERROR: Make sure your CSV files are in a folder named 'data' (e.g., './data/demand_forecasting.csv')")
+        st.error("FATAL ERROR: Make sure all three CSV files are in the same folder as app.py")
         return None, None, None
 
 demand_df, maintenance_df, route_df = load_data()
@@ -113,14 +112,16 @@ demand_df, maintenance_df, route_df = load_data()
 if demand_df is None:
     st.stop()
 
+
 # --- 4. SIDEBAR NAVIGATION ---
+# Use a placeholder URL for your logo
 st.sidebar.image("https://i.imgur.com/83ww43k.png", width=200) # Placeholder for Ugunja Logo
-st.sidebar.title("Ugunja: The Intelligence Engine")
+st.sidebar.title("Intelligence Engine")
 
 page = st.sidebar.radio(
     "Select a Model's Insights",
     [
-        "💸 Route Optimization (ROI)", # Lead with the "money" page
+        "🚚 Route Optimization (ROI)",
         "🔧 Predictive Maintenance",
         "📈 Demand Forecasting",
     ],
@@ -133,15 +134,15 @@ st.sidebar.info(
 )
 
 
-# --- 5. PAGE: ROUTE OPTIMIZATION (THE "MONEY SHOT") ---
-if page == "💸 Route Optimization (ROI)":
+# --- 5. PAGE: ROUTE OPTIMIZATION (Leading with the "Money" shot) ---
+if page == "🚚 Route Optimization (ROI)":
 
-    st.title("💸 Route Optimization Insights")
-    st.markdown("This is our **business proposal**. It shows how our AI directly saves costs by optimizing routes.")
+    st.title("🚚 Route Optimization Insights")
+    st.markdown("This is the 'Money' dashboard. It proves how our AI directly saves costs by optimizing routes.")
     
-    # --- ADVANCED EDA 5: Interactive ROI Calculator (HERO SECTION) ---
+    # --- ADVANCED EDA: Interactive ROI Calculator (HERO SECTION) ---
     with st.container(border=True):
-        st.header("Interactive ROI Calculator")
+        st.header("💸 Interactive ROI Calculator")
         st.markdown("Use the sliders to match your business costs and see the **real-time savings** our AI generates.")
         
         # Calculate total savings from the data
@@ -150,10 +151,10 @@ if page == "💸 Route Optimization (ROI)":
         total_hours_saved = savings_df.loc['Standard_Route']['total_time_hours'] - savings_df.loc['Ugunja_AI_Route']['total_time_hours']
         num_routes = int(len(route_df)/2)
 
-        col1, col2 = st.columns(2)
-        with col1:
-            cost_per_km_ksh = st.slider("Fuel/Maint. Cost per KM (KSh)", 20, 100, 40)
-        with col2:
+        col_slider_1, col_slider_2 = st.columns(2)
+        with col_slider_1:
+            cost_per_km_ksh = st.slider("Fuel & Maint. Cost per KM (KSh)", 20, 100, 40)
+        with col_slider_2:
             cost_per_hour_ksh = st.slider("Driver Labor Cost per Hour (KSh)", 300, 1000, 500)
         
         # Calculate total savings
@@ -162,41 +163,52 @@ if page == "💸 Route Optimization (ROI)":
         total_savings = total_fuel_savings + total_labor_savings
         
         st.divider()
-        st.subheader(f"Estimated Total Savings (from this {num_routes}-route dataset)")
         
-        col_m1, col_m2, col_m3 = st.columns(3)
-        col_m1.metric(label="Fuel/Maint. Savings", value=f"KSh {total_fuel_savings:,.0f}")
-        col_m2.metric(label="Labor Savings", value=f"KSh {total_labor_savings:,.0f}")
-        col_m3.metric(label="TOTAL SAVINGS", value=f"KSh {total_savings:,.0f}")
+        st.subheader("Estimated Total Savings (from this dataset)")
+        col_metric_1, col_metric_2, col_metric_3 = st.columns(3)
+        col_metric_1.metric(
+            label="Fuel/Maint. Savings (KSh)",
+            value=f"{total_fuel_savings:,.0f}"
+        )
+        col_metric_2.metric(
+            label="Labor Savings (KSh)",
+            value=f"{total_labor_savings:,.0f}"
+        )
+        col_metric_3.metric(
+            label="TOTAL SAVINGS",
+            value=f"KSh {total_savings:,.0f}"
+        )
 
-    # --- ADVANCED EDA 6 & 7: Waterfall and Efficiency Plots ---
+    # --- ADVANCED EDA: Waterfall & Efficiency Plots ---
     with st.container(border=True):
         st.header("How We Achieve These Savings")
         tab1, tab2 = st.tabs(["The 'Financial Breakdown' (Waterfall)", "The 'Efficiency Frontier' (Scatter)"])
         
         with tab1:
+            # Waterfall Chart
             st.markdown("This chart breaks down the *source* of the savings from the calculator above.")
             fig_waterfall = go.Figure(go.Waterfall(
                 name = "Savings", orientation = "v",
-                measure = ["relative", "relative", "total"],
                 x = ["Fuel/Maint. Savings (from KM)", "Labor Savings (from Hours)", "Total Savings"],
+                y = [total_fuel_savings, total_labor_savings, total_savings],
                 text = [f"KSh {total_fuel_savings:,.0f}", f"KSh {total_labor_savings:,.0f}", f"KSh {total_savings:,.0f}"],
                 textposition="auto",
-                y = [total_fuel_savings, total_labor_savings, total_savings],
+                measure = ["relative", "relative", "total"],
                 connector = {"line":{"color":"rgb(63, 63, 63)"}},
                 increasing = {"marker":{"color":"#FFA500"}}, # Ugunja Orange
-                totals = {"marker":{"color":"#00B050"}} # Green for total
+                totals = {"marker":{"color":"#008000"}} # Green for total
             ))
             fig_waterfall.update_layout(title = "Financial Breakdown of Savings", showlegend = False, template="plotly_dark")
             st.plotly_chart(fig_waterfall, use_container_width=True)
 
         with tab2:
+            # Efficiency Frontier
             st.markdown("This proves our AI is smarter. 'Standard' routes are a scattered cloud (inefficient). 'Ugunja AI' routes form a tight, optimal line (the 'Efficiency Frontier').")
             fig_frontier = px.scatter(
                 route_df, x="total_distance_km", y="total_time_hours",
                 color="route_type",
                 title="Ugunja AI vs. Standard Routes",
-                color_discrete_map={'Standard_Route': 'grey', 'Ugunja_AI_Route': '#FFA500'}, # Ugunja Orange
+                color_discrete_map={'Standard_Route': 'grey', 'Ugunja_AI_Route': '#FFA500'},
                 hover_data=['route_id']
             )
             fig_frontier.update_layout(template="plotly_dark")
@@ -220,13 +232,12 @@ elif page == "🔧 Predictive Maintenance":
         col2.metric("🔴 Vehicles at High Risk (>80%)", f"{high_risk_vehicles}")
         col3.metric("Avg. Fleet Risk Score", f"{avg_fleet_risk:.2%}")
 
-    # --- ADVANCED EDA 3: Fleet Risk Treemap ---
+    # --- ADVANCED EDA: Treemap (Hero Visual) ---
     with st.container(border=True):
         st.header("At-a-Glance Fleet Risk Overview (Treemap)")
-        st.markdown("See your entire fleet in one view. **Size** = Vehicle Mileage. **Color** = Risk Score. Instantly spot the high-risk, high-use vehicles.")
+        st.markdown("See your entire fleet in one view. **Size** = Vehicle Mileage (how much it works). **Color** = Risk Score (how likely it is to fail).")
         
         latest_fleet_data = maintenance_df.sort_values('date').drop_duplicates('vehicle_id', keep='last')
-        
         fig_tree = px.treemap(
             latest_fleet_data,
             path=[px.Constant("All Vehicles"), 'predicted_failure_type', 'vehicle_id'], # Hierarchy!
@@ -238,7 +249,7 @@ elif page == "🔧 Predictive Maintenance":
         fig_tree.update_layout(margin = dict(t=25, l=25, r=25, b=25), template="plotly_dark")
         st.plotly_chart(fig_tree, use_container_width=True)
 
-    # --- ADVANCED EDA 4: Anomaly Detection ---
+    # --- ADVANCED EDA: Anomaly Detection ---
     with st.container(border=True):
         st.header("Finding the 'Needle in the Haystack'")
         st.markdown("Our model spots the *one* bad truck out of the *entire* healthy fleet.")
@@ -261,7 +272,7 @@ elif page == "🔧 Predictive Maintenance":
             )
             fig_box.update_layout(template="plotly_dark")
             st.plotly_chart(fig_box, use_container_width=True)
-    
+            
     # --- Drill-down on a specific vehicle ---
     with st.container(border=True):
         st.header("Vehicle-Specific Anomaly Trend (The 'Proof')")
@@ -271,7 +282,7 @@ elif page == "🔧 Predictive Maintenance":
         selected_vehicle = st.selectbox(
             "Select a Vehicle to Analyze",
             options=all_vehicles,
-            index=list(all_vehicles).index(anomalous_vehicle) # Default to the anomalous one
+            index=list(all_vehicles).index(anomalous_vehicle)
         )
         
         vehicle_df = maintenance_df[maintenance_df['vehicle_id'] == selected_vehicle]
@@ -340,9 +351,8 @@ elif page == "📈 Demand Forecasting":
         with tab1:
             st.markdown("We break down demand into its core components: the **Trend** (long-term), **Seasonality** (weekly pattern), and **Residuals** (noise).")
             daily_demand_ts = demand_df.groupby('date')['predicted_demand_cylinders'].sum().reset_index().set_index('date')
-            if not daily_demand_ts.empty and len(daily_demand_ts) > 14: # Need enough data to decompose
+            if not daily_demand_ts.empty and len(daily_demand_ts) > 14:
                 decomposition = seasonal_decompose(daily_demand_ts['predicted_demand_cylinders'], model='additive', period=7)
-                
                 fig_decomp = make_subplots(
                     rows=4, cols=1, shared_xaxes=True,
                     subplot_titles=("1. Observed", "2. Trend", "3. Seasonal (Weekly)", "4. Residual")
