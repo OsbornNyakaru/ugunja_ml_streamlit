@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from statsmodels.tsa.seasonal import seasonal_decompose
-# Removed unused 'import calendar'
+import calendar  # For calendar heatmap
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
@@ -14,102 +14,20 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM CSS (The "Wow" Factor + Mobile Responsive) ---
-st.markdown(
-    """
-    <style>
-    /* --- HIDE STREAMLIT BRANDING --- */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-
-    /* --- DEFINE BRAND COLORS (UGUNJA ORANGE) --- */
-    :root {
-        --primary-color: #FFA500; /* Ugunja Orange */
-        --background-color: #0E1117; /* Streamlit Dark BG */
-        --secondary-background-color: #1a1f2b; /* Card BG */
-        --text-color: #FAFAFA;
-    }
-
-    /* --- APPLY BRAND COLOR TO WIDGETS --- */
-    div[data-baseweb="slider"] > div:nth-child(2) > div {
-        background: var(--primary-color) !important;
-    }
-    div[data-baseweb="slider"] > div:nth-child(3) {
-        background: var(--primary-color) !important;
-    }
-    div[data-baseweb="radio"] > div > label > div[role="radio"] {
-        background: var(--primary-color) !important;
-        border-color: var(--primary-color) !important;
-    }
-    
-    /* --- STYLE METRICS TO BE HIGH-IMPACT --- */
-    div[data-testid="stMetricValue"] {
-        font-size: 2.75rem; /* Desktop font size */
-        font-weight: 700;
-        color: var(--primary-color);
-    }
-    div[data-testid="stMetricLabel"] {
-        font-size: 1.1rem;
-        font-weight: 400;
-    }
-    
-    /* --- MODERN "CARD" LAYOUT --- */
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: var(--secondary-background-color);
-        border-radius: 10px;
-        padding: 1.5rem; /* Desktop padding */
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    
-    /* --- STYLE TABS --- */
-    button[data-baseweb="tab"] {
-        font-size: 1rem;
-        font-weight: 500;
-    }
-    button[data-baseweb="tab"][aria-selected="true"] {
-        color: var(--primary-color);
-        border-bottom: 2px solid var(--primary-color);
-    }
-    
-    /* --- STYLE SIDEBAR --- */
-    [data-testid="stSidebar"] {
-        background-color: #141820;
-    }
-    /* REVAMP: Replaced fragile hashed class with a stable selector */
-    [data-testid="stSidebar"] [data-baseweb="radio"] label {
-        font-size: 1.1rem;
-        font-weight: 500;
-    }
-    
-    /* --- 🌟 MOBILE-RESPONSIVE CSS 🌟 --- */
-    @media (max-width: 768px) {
-        div[data-testid="stVerticalBlockBorderWrapper"] {
-            padding: 0.75rem;
-        }
-        div[data-testid="stMetricValue"] {
-            font-size: 2.0rem;
-        }
-        div[data-testid="stMetricLabel"] {
-            font-size: 0.9rem;
-        }
-        /* REVAMP: Replaced fragile hashed class with a stable selector */
-        [data-testid="stHorizontalBlock"] {
-            flex-direction: column !important;
-        }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
+# --- 2. HIDE STREAMLIT BRANDING (Makes it look professional) ---
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # --- 3. DATA LOADING & CACHING ---
 @st.cache_data
 def load_data():
     try:
-        # Using the ./data/ path as specified in your code
         demand_df = pd.read_csv('./data/demand_forecasting.csv')
         maintenance_df = pd.read_csv('./data/predictive_maintenance.csv')
         route_df = pd.read_csv('./data/route_optimization.csv')
@@ -119,8 +37,7 @@ def load_data():
         
         return demand_df, maintenance_df, route_df
     except FileNotFoundError:
-        # REVAMP: Fixed error message to match the correct path
-        st.error("FATAL ERROR: Make sure your CSV files are in a folder named 'data' (e.g., './data/demand_forecasting.csv')")
+        st.error("FATAL ERROR: Make sure all three CSV files are in the same folder as app.py")
         return None, None, None
 
 demand_df, maintenance_df, route_df = load_data()
@@ -130,14 +47,14 @@ if demand_df is None:
 
 # --- 4. SIDEBAR NAVIGATION ---
 st.sidebar.image("https://i.imgur.com/83ww43k.png", width=200) # Placeholder for Ugunja Logo
-st.sidebar.title("Intelligence Engine")
+st.sidebar.title("Ugunja: The Intelligence Engine")
 
 page = st.sidebar.radio(
     "Select a Model's Insights",
     [
-        "💸 Route Optimization (ROI)", # Lead with the "money" page
-        "🔧 Predictive Maintenance",
         "📈 Demand Forecasting",
+        "🔧 Predictive Maintenance",
+        "🚚 Route Optimization",
     ],
     label_visibility="collapsed"
 )
@@ -147,80 +64,61 @@ st.sidebar.info(
     "The data is a simulation of a real-world Greenwells fleet."
 )
 
+# --- 5. PAGE: DEMAND FORECASTING ---
+if page == "📈 Demand Forecasting":
 
-# --- 5. PAGE: ROUTE OPTIMIZATION (THE "MONEY SHOT") ---
-if page == "💸 Route Optimization (ROI)":
+    st.title("📈 Demand Forecasting Insights")
+    st.markdown("Predicting demand to move from a *reactive* to a *predictive* supply chain.")
 
-    st.title("💸 Route Optimization Insights")
-    st.markdown("This is our **business proposal**. It shows how our AI directly saves costs by optimizing routes.")
+    # --- KPIs ---
+    total_predicted = demand_df['predicted_demand_cylinders'].sum()
+    highest_demand_zone = demand_df.groupby('neighborhood')['predicted_demand_cylinders'].sum().idxmax()
     
-    # --- ADVANCED EDA: Interactive ROI Calculator (HERO SECTION) ---
-    with st.container(border=True):
-        st.header("Interactive ROI Calculator")
-        st.markdown("Use the sliders to match your business costs and see the **real-time savings** our AI generates.")
-        
-        # Calculate total savings from the data
-        savings_df = route_df.groupby('route_type').sum(numeric_only=True)
-        total_km_saved = savings_df.loc['Standard_Route']['total_distance_km'] - savings_df.loc['Ugunja_AI_Route']['total_distance_km']
-        total_hours_saved = savings_df.loc['Standard_Route']['total_time_hours'] - savings_df.loc['Ugunja_AI_Route']['total_time_hours']
-        num_routes = int(len(route_df)/2)
+    col1, col2 = st.columns(2)
+    col1.metric("Total Predicted Demand (Next 6mo)", f"{total_predicted:,} Cylinders")
+    col2.metric("Projected Hotspot", highest_demand_zone)
 
-        col1, col2 = st.columns(2)
-        with col1:
-            cost_per_km_ksh = st.slider("Fuel/Maint. Cost per KM (KSh)", 20, 100, 40)
-        with col2:
-            cost_per_hour_ksh = st.slider("Driver Labor Cost per Hour (KSh)", 300, 1000, 500)
+    # --- ADVANCED EDA 1: Calendar Heatmap ---
+    st.subheader("Daily Demand Pattern (Calendar Heatmap)")
+    st.markdown("This shows daily demand intensity. Our model sees that demand peaks on weekends and holidays.")
+    
+    try:
+        # Requires 'calplot' - if not installed, we'll fall back.
+        # Let's do a manual Plotly one to avoid new dependencies.
+        daily_demand = demand_df.groupby('date')['predicted_demand_cylinders'].sum().reset_index()
+        daily_demand['day_of_week'] = daily_demand['date'].dt.day_name()
+        daily_demand['week_of_year'] = daily_demand['date'].dt.isocalendar().week
+        daily_demand['month'] = daily_demand['date'].dt.month_name()
         
-        # Calculate total savings
-        total_fuel_savings = total_km_saved * cost_per_km_ksh
-        total_labor_savings = total_hours_saved * cost_per_hour_ksh
-        total_savings = total_fuel_savings + total_labor_savings
-        
-        st.divider()
-        st.subheader(f"Estimated Total Savings (from this {num_routes}-route dataset)")
-        
-        col_m1, col_m2, col_m3 = st.columns(3)
-        col_m1.metric(label="Fuel/Maint. Savings", value=f"KSh {total_fuel_savings:,.0f}")
-        col_m2.metric(label="Labor Savings", value=f"KSh {total_labor_savings:,.0f}")
-        col_m3.metric(label="TOTAL SAVINGS", value=f"KSh {total_savings:,.0f}")
-        
-        # REVAMP: Added this success message back in for a clearer breakdown
-        st.success(f"Breakdown: **KSh {total_fuel_savings:,.0f}** from fuel/maint. + **KSh {total_labor_savings:,.0f}** from labor.")
+        fig_cal = px.density_heatmap(
+            daily_demand, x="week_of_year", y="day_of_week", z="predicted_demand_cylinders",
+            histfunc="avg", title="Average Predicted Demand by Day of Week",
+            color_continuous_scale="OrRd",
+            facet_col="month", facet_col_wrap=4,
+            labels={'predicted_demand_cylinders': 'Avg Demand'}
+        )
+        fig_cal.update_layout(coloraxis_showscale=False)
+        st.plotly_chart(fig_cal, use_container_width=True)
+    except Exception as e:
+        st.warning(f"Could not generate calendar heatmap: {e}")
 
-    # --- ADVANCED EDA: Waterfall and Efficiency Plots ---
-    with st.container(border=True):
-        st.header("How We Achieve These Savings")
-        tab1, tab2 = st.tabs(["The 'Financial Breakdown' (Waterfall)", "The 'Efficiency Frontier' (Scatter)"])
-        
-        with tab1:
-            st.markdown("This chart breaks down the *source* of the savings from the calculator above.")
-            fig_waterfall = go.Figure(go.Waterfall(
-                name = "Savings", orientation = "v",
-                measure = ["relative", "relative", "total"],
-                x = ["Fuel/Maint. Savings (from KM)", "Labor Savings (from Hours)", "Total Savings"],
-                y = [total_fuel_savings, total_labor_savings, total_savings],
-                text = [f"KSh {total_fuel_savings:,.0f}", f"KSh {total_labor_savings:,.0f}", f"KSh {total_savings:,.0f}"],
-                textposition="auto",
-                connector = {"line":{"color":"rgb(63, 63, 63)"}},
-                increasing = {"marker":{"color":"#FFA500"}}, # Ugunja Orange
-                totals = {"marker":{"color":"#00B050"}} # Green for total
-            ))
-            # REVAMP: Added template="plotly_dark"
-            fig_waterfall.update_layout(title = "Financial Breakdown of Savings", showlegend = False, template="plotly_dark")
-            st.plotly_chart(fig_waterfall, use_container_width=True)
-
-        with tab2:
-            st.markdown("This proves our AI is smarter. 'Standard' routes are a scattered cloud (inefficient). 'Ugunja AI' routes form a tight, optimal line (the 'Efficiency Frontier').")
-            fig_frontier = px.scatter(
-                route_df, x="total_distance_km", y="total_time_hours",
-                color="route_type",
-                title="Ugunja AI vs. Standard Routes",
-                color_discrete_map={'Standard_Route': 'grey', 'Ugunja_AI_Route': '#FFA500'},
-                hover_data=['route_id']
-            )
-            # REVAMP: Added template="plotly_dark"
-            fig_frontier.update_layout(template="plotly_dark")
-            st.plotly_chart(fig_frontier, use_container_width=True)
+    # --- ADVANCED EDA 2: Time Series Decomposition ---
+    st.subheader("Decomposing the 'Why' of Demand")
+    st.markdown("We break down demand into its core components to prove our model understands complex, long-term patterns.")
+    
+    daily_demand_ts = demand_df.groupby('date')['predicted_demand_cylinders'].sum().reset_index().set_index('date')
+    if not daily_demand_ts.empty and len(daily_demand_ts) > 14:
+        decomposition = seasonal_decompose(daily_demand_ts['predicted_demand_cylinders'], model='additive', period=7)
+        fig_decomp = make_subplots(
+            rows=4, cols=1, shared_xaxes=True,
+            subplot_titles=("1. Observed: The actual data", "2. Trend: The long-term direction", "3. Seasonal: The weekly pattern", "4. Residual: The 'noise'")
+        )
+        fig_decomp.add_trace(go.Scatter(x=decomposition.observed.index, y=decomposition.observed, mode='lines', name='Observed'), row=1, col=1)
+        fig_decomp.add_trace(go.Scatter(x=decomposition.trend.index, y=decomposition.trend, mode='lines', name='Trend', line=dict(color='orange')), row=2, col=1)
+        fig_decomp.add_trace(go.Scatter(x=decomposition.seasonal.index, y=decomposition.seasonal, mode='lines', name='Seasonal', line=dict(color='green')), row=3, col=1)
+        fig_decomp.add_trace(go.Scatter(x=decomposition.resid.index, y=decomposition.resid, mode='markers', name='Residual', marker=dict(size=2, color='gray')), row=4, col=1)
+        fig_decomp.update_layout(height=700, showlegend=False, margin=dict(t=100))
+        st.plotly_chart(fig_decomp, use_container_width=True)
 
 
 # --- 6. PAGE: PREDICTIVE MAINTENANCE ---
@@ -230,175 +128,133 @@ elif page == "🔧 Predictive Maintenance":
     st.markdown("Preventing costly breakdowns *before* they happen. This is our 'insurance policy' for the fleet.")
 
     # --- KPIs ---
-    with st.container(border=True):
-        high_risk_vehicles = maintenance_df[maintenance_df['predicted_risk_score'] > 0.8]['vehicle_id'].nunique()
-        total_fleet_size = maintenance_df['vehicle_id'].nunique()
-        avg_fleet_risk = maintenance_df['predicted_risk_score'].mean()
-        
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total Fleet Size", f"{total_fleet_size} Vehicles")
-        col2.metric("🔴 Vehicles at High Risk (>80%)", f"{high_risk_vehicles}")
-        col3.metric("Avg. Fleet Risk Score", f"{avg_fleet_risk:.2%}")
+    high_risk_vehicles = maintenance_df[maintenance_df['predicted_risk_score'] > 0.8]['vehicle_id'].nunique()
+    total_fleet_size = maintenance_df['vehicle_id'].nunique()
+    
+    col1, col2 = st.columns(2)
+    col1.metric("Total Fleet Size", f"{total_fleet_size} Vehicles")
+    col2.metric("🔴 Vehicles at High Risk (>80%)", f"{high_risk_vehicles}", delta_color="inverse")
 
-    # --- ADVANCED EDA: Treemap (Hero Visual) ---
-    with st.container(border=True):
-        st.header("At-a-Glance Fleet Risk Overview (Treemap)")
-        st.markdown("See your entire fleet in one view. **Size** = Vehicle Mileage. **Color** = Risk Score. Instantly spot the high-risk, high-use vehicles.")
-        
-        latest_fleet_data = maintenance_df.sort_values('date').drop_duplicates('vehicle_id', keep='last')
-        
-        fig_tree = px.treemap(
-            latest_fleet_data,
-            path=[px.Constant("All Vehicles"), 'predicted_failure_type', 'vehicle_id'], # Hierarchy!
-            values='mileage',
-            color='predicted_risk_score',
-            color_continuous_scale='OrRd', # Orange-Red is perfect for risk
-            hover_data={'predicted_failure_type': True, 'predicted_risk_score': ':.2f', 'mileage': True}
+    # --- ADVANCED EDA 3: Fleet Risk Treemap ---
+    st.subheader("At-a-Glance Fleet Risk Overview (Treemap)")
+    st.markdown("This shows your entire fleet in one box. The **size** of the rectangle is the vehicle's mileage (how much it works), and the **color** is its risk score. You can instantly spot the high-risk, high-use vehicles.")
+    
+    # Get the latest data point for each vehicle
+    latest_fleet_data = maintenance_df.sort_values('date').drop_duplicates('vehicle_id', keep='last')
+    
+    fig_tree = px.treemap(
+        latest_fleet_data,
+        path=[px.Constant("All Vehicles"), 'vehicle_id'], # Create a hierarchy
+        values='mileage',
+        color='predicted_risk_score',
+        color_continuous_scale='OrRd', # Orange-Red is perfect for risk
+        hover_data={'predicted_failure_type': True, 'predicted_risk_score': ':.2f', 'mileage': True}
+    )
+    fig_tree.update_layout(margin = dict(t=25, l=25, r=25, b=25))
+    st.plotly_chart(fig_tree, use_container_width=True)
+
+    # --- ADVANCED EDA 4: Anomaly Detection ---
+    st.subheader("Finding the 'Needle in the Haystack'")
+    st.markdown("Our model spots the *one* bad truck out of the *entire* healthy fleet.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        # Anomaly Scatter Plot
+        fig_scatter = px.scatter(
+            maintenance_df, x="avg_fuel_consumption_l_100km", y="predicted_risk_score",
+            color="vehicle_id", hover_data=['date', 'predicted_failure_type'],
+            title="Fleet-Wide Anomaly Detection"
         )
-        # REVAMP: Added template="plotly_dark"
-        fig_tree.update_layout(margin = dict(t=25, l=25, r=25, b=25), template="plotly_dark")
-        st.plotly_chart(fig_tree, use_container_width=True)
-
-    # --- Anomaly Detection Tabs ---
-    with st.container(border=True):
-        st.header("Finding the 'Needle in the Haystack'")
-        st.markdown("Our model spots the *one* bad truck out of the *entire* healthy fleet.")
-        
-        tab1, tab2 = st.tabs(["Fleet-Wide Anomaly (Scatter)", "Risk Distribution (Box Plot)"])
-        
-        with tab1:
-            fig_scatter = px.scatter(
-                maintenance_df, x="avg_fuel_consumption_l_100km", y="predicted_risk_score",
-                color="vehicle_id", hover_data=['date', 'predicted_failure_type'],
-                title="Outlier Detection: Fuel Use vs. Risk"
-            )
-            # REVAMP: Added template="plotly_dark"
-            fig_scatter.update_layout(template="plotly_dark")
-            st.plotly_chart(fig_scatter, use_container_width=True)
-        
-        with tab2:
-            fig_box = px.box(
-                maintenance_df, x="vehicle_id", y="predicted_risk_score",
-                color="vehicle_id", title="Vehicle Risk Score Distribution"
-            )
-            # REVAMP: Added template="plotly_dark"
-            fig_box.update_layout(template="plotly_dark")
-            st.plotly_chart(fig_box, use_container_width=True)
-            
-    # --- Drill-down Tabs ---
-    with st.container(border=True):
-        st.header("Vehicle-Specific Anomaly Trend (The 'Proof')")
-        all_vehicles = maintenance_df['vehicle_id'].unique()
-        anomalous_vehicle = 'KDC 456Y' if 'KDC 456Y' in all_vehicles else all_vehicles[0]
-        
-        selected_vehicle = st.selectbox(
-            "Select a Vehicle to Analyze",
-            options=all_vehicles,
-            index=list(all_vehicles).index(anomalous_vehicle)
+        st.plotly_chart(fig_scatter, use_container_width=True)
+    with col2:
+        # Risk Distribution Box Plot
+        fig_box = px.box(
+            maintenance_df, x="vehicle_id", y="predicted_risk_score",
+            color="vehicle_id", title="Vehicle Risk Score Distribution"
         )
+        st.plotly_chart(fig_box, use_container_width=True)
+    
+    # --- Drill-down on a specific vehicle ---
+    st.header("Vehicle-Specific Anomaly Trend (The 'Proof')")
+    all_vehicles = maintenance_df['vehicle_id'].unique()
+    anomalous_vehicle = 'KDC 456Y' if 'KDC 456Y' in all_vehicles else all_vehicles[0]
+    
+    selected_vehicle = st.selectbox(
+        "Select a Vehicle to Analyze",
+        options=all_vehicles,
+        index=list(all_vehicles).index(anomalous_vehicle) # Default to the anomalous one
+    )
+    
+    vehicle_df = maintenance_df[maintenance_df['vehicle_id'] == selected_vehicle]
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        fig_fuel_trend = px.line(vehicle_df, x='date', y='avg_fuel_consumption_l_100km', title=f"Fuel Consumption Trend")
+        st.plotly_chart(fig_fuel_trend, use_container_width=True)
+    with col2:
+        fig_risk_trend = px.line(vehicle_df, x='date', y='predicted_risk_score', title=f"Predicted Risk Score Trend")
+        fig_risk_trend.update_yaxes(range=[0, 1])
+        st.plotly_chart(fig_risk_trend, use_container_width=True)
+
+
+# --- 7. PAGE: ROUTE OPTIMIZATION ---
+elif page == "🚚 Route Optimization":
+
+    st.title("🚚 Route Optimization Insights")
+    st.markdown("Saving time and money by finding the most efficient path, every time.")
+    
+    # --- ADVANCED EDA 5: Interactive ROI Calculator ---
+    st.header("💸 Interactive ROI Calculator (The 'Money Shot')")
+    st.markdown("This is a direct business proposal. Use the sliders to see how much money Ugunja saves you based on *your* operational costs.")
+    
+    savings_df = route_df.groupby('route_type').sum(numeric_only=True)
+    total_km_saved = savings_df.loc['Standard_Route']['total_distance_km'] - savings_df.loc['Ugunja_AI_Route']['total_distance_km']
+    total_hours_saved = savings_df.loc['Standard_Route']['total_time_hours'] - savings_df.loc['Ugunja_AI_Route']['total_time_hours']
+    num_routes = int(len(route_df)/2)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        cost_per_km_ksh = st.slider("Fuel/Maint. Cost per KM (KSh)", 20, 100, 40)
+        cost_per_hour_ksh = st.slider("Driver Labor Cost per Hour (KSh)", 300, 1000, 500)
+    
+    with col2:
+        total_fuel_savings = total_km_saved * cost_per_km_ksh
+        total_labor_savings = total_hours_saved * cost_per_hour_ksh
+        total_savings = total_fuel_savings + total_labor_savings
         
-        vehicle_df = maintenance_df[maintenance_df['vehicle_id'] == selected_vehicle]
-        
-        tab1, tab2 = st.tabs(["Fuel Consumption Trend", "Predicted Risk Trend"])
-        
-        with tab1:
-            fig_fuel_trend = px.line(vehicle_df, x='date', y='avg_fuel_consumption_l_100km', title=f"Fuel Consumption Trend")
-            # REVAMP: Added template="plotly_dark"
-            fig_fuel_trend.update_layout(template="plotly_dark")
-            st.plotly_chart(fig_fuel_trend, use_container_width=True)
-        with tab2:
-            fig_risk_trend = px.line(vehicle_df, x='date', y='predicted_fs_risk_score', title=f"Predicted Risk Score Trend")
-            fig_risk_trend.update_yaxes(range=[0, 1])
-            # REVAMP: Added template="plotly_dark"
-            fig_risk_trend.update_layout(template="plotly_dark")
-            st.plotly_chart(fig_risk_trend, use_container_width=True)
+        st.metric(
+            label=f"ESTIMATED TOTAL SAVINGS (from {num_routes} routes)",
+            value=f"KSh {total_savings:,.0f}"
+        )
+        st.success(f"From **KSh {total_fuel_savings:,.0f}** in fuel/maint. and **KSh {total_labor_savings:,.0f}** in labor.")
+    
+    # --- ADVANCED EDA 6: Waterfall Chart ---
+    st.subheader("Visualizing Your Savings (Waterfall Chart)")
+    st.markdown("This chart breaks down the exact financial impact of our AI.")
+    
+    fig_waterfall = go.Figure(go.Waterfall(
+        name = "Savings", orientation = "v",
+        measure = ["relative", "relative", "total"],
+        x = ["Fuel/Maint. Savings (from KM)", "Labor Savings (from Hours)", "Total Savings"],
+        text = [f"KSh {total_fuel_savings:,.0f}", f"KSh {total_labor_savings:,.0f}", f"KSh {total_savings:,.0f}"],
+        y = [total_fuel_savings, total_labor_savings, total_savings],
+        connector = {"line":{"color":"rgb(63, 63, 63)"}},
+        increasing = {"marker":{"color":"orange"}},
+        totals = {"marker":{"color":"green"}}
+    ))
+    fig_waterfall.update_layout(title = "Financial Breakdown of Savings", showlegend = False)
+    st.plotly_chart(fig_waterfall, use_container_width=True)
 
-
-# --- 7. PAGE: DEMAND FORECASTING ---
-elif page == "📈 Demand Forecasting":
-
-    st.title("📈 Demand Forecasting Insights")
-    st.markdown("Predicting demand to move from a *reactive* to a *predictive* supply chain.")
-
-    # --- KPIs ---
-    with st.container(border=True):
-        total_predicted = demand_df['predicted_demand_cylinders'].sum()
-        highest_demand_zone = demand_df.groupby('neighborhood')['predicted_demand_cylinders'].sum().idxmax()
-        peak_day = demand_df.groupby('day_of_week')['predicted_demand_cylinders'].sum().idxmax()
-        
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total Predicted Demand (Dataset)", f"{total_predicted:,} Cylinders")
-        col2.metric("Projected Hotspot", highest_demand_zone)
-        col3.metric("Projected Peak Day", peak_day)
-
-    # --- ADVANCED EDA 1: Calendar Heatmap ---
-    with st.container(border=True):
-        st.header("Daily Demand Pattern (Calendar Heatmap)")
-        st.markdown("This shows daily demand intensity. Our model sees that demand peaks on weekends and holidays.")
-        
-        try:
-            daily_demand = demand_df.groupby('date')['predicted_demand_cylinders'].sum().reset_index()
-            daily_demand['day_of_week'] = daily_demand['date'].dt.day_name()
-            daily_demand['week_of_year'] = daily_demand['date'].dt.isocalendar().week
-            daily_demand['month_name'] = daily_demand['date'].dt.month_name()
-            daily_demand['month_num'] = daily_demand['date'].dt.month
-            
-            # Sort by month number for correct faceting
-            daily_demand = daily_demand.sort_values('month_num')
-            
-            fig_cal = px.density_heatmap(
-                daily_demand, x="week_of_year", y="day_of_week", z="predicted_demand_cylinders",
-                histfunc="avg", title="Average Predicted Demand by Day of Week",
-                color_continuous_scale="OrRd",
-                facet_col="month_name", facet_col_wrap=4,
-                labels={'predicted_demand_cylinders': 'Avg Demand'}
-            )
-            # REVAMP: Added template="plotly_dark"
-            fig_cal.update_layout(coloraxis_showscale=False, template="plotly_dark", height=700)
-            st.plotly_chart(fig_cal, use_container_width=True)
-        except Exception as e:
-            st.warning(f"Could not generate calendar heatmap: {e}")
-
-    # --- ADVANCED EDA 2: Decomposition & Correlation ---
-    with st.container(border=True):
-        st.header("Understanding the 'Why' of Demand")
-        tab1, tab2 = st.tabs(["Time Series Decomposition", "Demand Driver Correlation"])
-
-        with tab1:
-            st.markdown("We break down demand into its core components: the **Trend** (long-term), **Seasonality** (weekly pattern), and **Residuals** (noise).")
-            daily_demand_ts = demand_df.groupby('date')['predicted_demand_cylinders'].sum().reset_index().set_index('date')
-            if not daily_demand_ts.empty and len(daily_demand_ts) > 14: # Need enough data to decompose
-                decomposition = seasonal_decompose(daily_demand_ts['predicted_demand_cylinders'], model='additive', period=7)
-                
-                fig_decomp = make_subplots(
-                    rows=4, cols=1, shared_xaxes=True,
-                    subplot_titles=("1. Observed", "2. Trend", "3. Seasonal (Weekly)", "4. Residual")
-                )
-                fig_decomp.add_trace(go.Scatter(x=decomposition.observed.index, y=decomposition.observed, mode='lines', name='Observed'), row=1, col=1)
-                fig_decomp.add_trace(go.Scatter(x=decomposition.trend.index, y=decomposition.trend, mode='lines', name='Trend', line=dict(color='orange')), row=2, col=1)
-                fig_decomp.add_trace(go.Scatter(x=decomposition.seasonal.index, y=decomposition.seasonal, mode='lines', name='Seasonal', line=dict(color='green')), row=3, col=1)
-                fig_decomp.add_trace(go.Scatter(x=decomposition.resid.index, y=decomposition.resid, mode='markers', name='Residual', marker=dict(size=2, color='gray')), row=4, col=1)
-                # REVAMP: Added template="plotly_dark"
-                fig_decomp.update_layout(height=700, showlegend=False, margin=dict(t=100), template="plotly_dark")
-                st.plotly_chart(fig_decomp, use_container_width=True)
-
-        with tab2:
-            st.markdown("This matrix shows what drives demand. A high number (e.g., 0.8) means a strong link. **(Weekend = 6, 7)**.")
-            df_corr = demand_df.copy()
-            day_map = {'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7}
-            df_corr['day_of_week_num'] = df_corr['day_of_week'].map(day_map)
-            weather_map = {'Rainy': 0, 'Cloudy': 1, 'Sunny': 2}
-            df_corr['weather_num'] = df_corr['weather'].map(weather_map)
-            
-            corr_df = df_corr[['predicted_demand_cylinders', 'day_of_week_num', 'weather_num', 'is_holiday']]
-            corr_matrix = corr_df.corr()
-
-            fig_heatmap = px.imshow(
-                corr_matrix, text_auto=".2f", aspect="auto",
-                color_continuous_scale='OrRd', labels=dict(color="Correlation"),
-                title="Correlation: What Drives Demand?"
-            )
-            fig_heatmap.update_xaxes(side="top")
-            # REVAMP: Added template="plotly_dark"
-            fig_heatmap.update_layout(template="plotly_dark")
-            st.plotly_chart(fig_heatmap, use_container_width=True)
+    # --- ADVANCED EDA 7: Efficiency Frontier ---
+    st.subheader("Proving Our AI is Smarter (The 'Efficiency Frontier')")
+    st.markdown("This shows every route. The 'Standard' routes are a scattered cloud. The 'Ugunja AI' routes are a tight, optimized line. Our AI consistently finds the best balance of distance and time.")
+    
+    fig_frontier = px.scatter(
+        route_df,
+        x="total_distance_km", y="total_time_hours",
+        color="route_type",
+        title="Ugunja AI vs. Standard Routes",
+        color_discrete_map={'Standard_Route': 'grey', 'Ugunja_AI_Route': 'orange'},
+        hover_data=['route_id']
+    )
+    st.plotly_chart(fig_frontier, use_container_width=True)
