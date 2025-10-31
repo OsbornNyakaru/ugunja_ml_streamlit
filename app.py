@@ -19,8 +19,8 @@ st.set_page_config(
 def load_data():
     try:
         demand_df = pd.read_csv('./data/demand_forecasting.csv')
-        maintenance_df = pd.read_csv('predictive_maintenance.csv')
-        route_df = pd.read_csv('route_optimization.csv')
+        maintenance_df = pd.read_csv('./data/predictive_maintenance.csv')
+        route_df = pd.read_csv('./data/route_optimization.csv')
         
         # Convert date columns for proper plotting
         demand_df['date'] = pd.to_datetime(demand_df['date'])
