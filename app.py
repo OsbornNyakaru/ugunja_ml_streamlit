@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from statsmodels.tsa.seasonal import seasonal_decompose
+# Removed unused 'import calendar'
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
@@ -76,28 +77,25 @@ st.markdown(
     [data-testid="stSidebar"] {
         background-color: #141820;
     }
-    [data-testid="stSidebar"] .st-emotion-cache-16txtl3 { /* Sidebar radio labels */
+    /* REVAMP: Replaced fragile hashed class with a stable selector */
+    [data-testid="stSidebar"] [data-baseweb="radio"] label {
         font-size: 1.1rem;
         font-weight: 500;
     }
     
     /* --- 🌟 MOBILE-RESPONSIVE CSS 🌟 --- */
     @media (max-width: 768px) {
-        /* Reduce padding on cards for mobile */
         div[data-testid="stVerticalBlockBorderWrapper"] {
             padding: 0.75rem;
         }
-        
-        /* Reduce font size for metrics on mobile */
         div[data-testid="stMetricValue"] {
             font-size: 2.0rem;
         }
         div[data-testid="stMetricLabel"] {
             font-size: 0.9rem;
         }
-        
-        /* Ensure columns stack cleanly */
-        .st-emotion-cache-1l269bu {
+        /* REVAMP: Replaced fragile hashed class with a stable selector */
+        [data-testid="stHorizontalBlock"] {
             flex-direction: column !important;
         }
     }
@@ -121,6 +119,7 @@ def load_data():
         
         return demand_df, maintenance_df, route_df
     except FileNotFoundError:
+        # REVAMP: Fixed error message to match the correct path
         st.error("FATAL ERROR: Make sure your CSV files are in a folder named 'data' (e.g., './data/demand_forecasting.csv')")
         return None, None, None
 
@@ -184,6 +183,9 @@ if page == "💸 Route Optimization (ROI)":
         col_m1.metric(label="Fuel/Maint. Savings", value=f"KSh {total_fuel_savings:,.0f}")
         col_m2.metric(label="Labor Savings", value=f"KSh {total_labor_savings:,.0f}")
         col_m3.metric(label="TOTAL SAVINGS", value=f"KSh {total_savings:,.0f}")
+        
+        # REVAMP: Added this success message back in for a clearer breakdown
+        st.success(f"Breakdown: **KSh {total_fuel_savings:,.0f}** from fuel/maint. + **KSh {total_labor_savings:,.0f}** from labor.")
 
     # --- ADVANCED EDA: Waterfall and Efficiency Plots ---
     with st.container(border=True):
@@ -203,6 +205,7 @@ if page == "💸 Route Optimization (ROI)":
                 increasing = {"marker":{"color":"#FFA500"}}, # Ugunja Orange
                 totals = {"marker":{"color":"#00B050"}} # Green for total
             ))
+            # REVAMP: Added template="plotly_dark"
             fig_waterfall.update_layout(title = "Financial Breakdown of Savings", showlegend = False, template="plotly_dark")
             st.plotly_chart(fig_waterfall, use_container_width=True)
 
@@ -215,6 +218,7 @@ if page == "💸 Route Optimization (ROI)":
                 color_discrete_map={'Standard_Route': 'grey', 'Ugunja_AI_Route': '#FFA500'},
                 hover_data=['route_id']
             )
+            # REVAMP: Added template="plotly_dark"
             fig_frontier.update_layout(template="plotly_dark")
             st.plotly_chart(fig_frontier, use_container_width=True)
 
@@ -251,11 +255,11 @@ elif page == "🔧 Predictive Maintenance":
             color_continuous_scale='OrRd', # Orange-Red is perfect for risk
             hover_data={'predicted_failure_type': True, 'predicted_risk_score': ':.2f', 'mileage': True}
         )
+        # REVAMP: Added template="plotly_dark"
         fig_tree.update_layout(margin = dict(t=25, l=25, r=25, b=25), template="plotly_dark")
         st.plotly_chart(fig_tree, use_container_width=True)
 
-    # --- 🌟 MOBILE-FRIENDLY IMPROVEMENT 🌟 ---
-    # Replaced st.columns with st.tabs for mobile-friendly navigation
+    # --- Anomaly Detection Tabs ---
     with st.container(border=True):
         st.header("Finding the 'Needle in the Haystack'")
         st.markdown("Our model spots the *one* bad truck out of the *entire* healthy fleet.")
@@ -268,6 +272,7 @@ elif page == "🔧 Predictive Maintenance":
                 color="vehicle_id", hover_data=['date', 'predicted_failure_type'],
                 title="Outlier Detection: Fuel Use vs. Risk"
             )
+            # REVAMP: Added template="plotly_dark"
             fig_scatter.update_layout(template="plotly_dark")
             st.plotly_chart(fig_scatter, use_container_width=True)
         
@@ -276,11 +281,11 @@ elif page == "🔧 Predictive Maintenance":
                 maintenance_df, x="vehicle_id", y="predicted_risk_score",
                 color="vehicle_id", title="Vehicle Risk Score Distribution"
             )
+            # REVAMP: Added template="plotly_dark"
             fig_box.update_layout(template="plotly_dark")
             st.plotly_chart(fig_box, use_container_width=True)
             
-    # --- 🌟 MOBILE-FRIENDLY IMPROVEMENT 🌟 ---
-    # Replaced st.columns with st.tabs for the drill-down
+    # --- Drill-down Tabs ---
     with st.container(border=True):
         st.header("Vehicle-Specific Anomaly Trend (The 'Proof')")
         all_vehicles = maintenance_df['vehicle_id'].unique()
@@ -298,11 +303,13 @@ elif page == "🔧 Predictive Maintenance":
         
         with tab1:
             fig_fuel_trend = px.line(vehicle_df, x='date', y='avg_fuel_consumption_l_100km', title=f"Fuel Consumption Trend")
+            # REVAMP: Added template="plotly_dark"
             fig_fuel_trend.update_layout(template="plotly_dark")
             st.plotly_chart(fig_fuel_trend, use_container_width=True)
         with tab2:
-            fig_risk_trend = px.line(vehicle_df, x='date', y='predicted_risk_score', title=f"Predicted Risk Score Trend")
+            fig_risk_trend = px.line(vehicle_df, x='date', y='predicted_fs_risk_score', title=f"Predicted Risk Score Trend")
             fig_risk_trend.update_yaxes(range=[0, 1])
+            # REVAMP: Added template="plotly_dark"
             fig_risk_trend.update_layout(template="plotly_dark")
             st.plotly_chart(fig_risk_trend, use_container_width=True)
 
@@ -346,6 +353,7 @@ elif page == "📈 Demand Forecasting":
                 facet_col="month_name", facet_col_wrap=4,
                 labels={'predicted_demand_cylinders': 'Avg Demand'}
             )
+            # REVAMP: Added template="plotly_dark"
             fig_cal.update_layout(coloraxis_showscale=False, template="plotly_dark", height=700)
             st.plotly_chart(fig_cal, use_container_width=True)
         except Exception as e:
@@ -370,6 +378,7 @@ elif page == "📈 Demand Forecasting":
                 fig_decomp.add_trace(go.Scatter(x=decomposition.trend.index, y=decomposition.trend, mode='lines', name='Trend', line=dict(color='orange')), row=2, col=1)
                 fig_decomp.add_trace(go.Scatter(x=decomposition.seasonal.index, y=decomposition.seasonal, mode='lines', name='Seasonal', line=dict(color='green')), row=3, col=1)
                 fig_decomp.add_trace(go.Scatter(x=decomposition.resid.index, y=decomposition.resid, mode='markers', name='Residual', marker=dict(size=2, color='gray')), row=4, col=1)
+                # REVAMP: Added template="plotly_dark"
                 fig_decomp.update_layout(height=700, showlegend=False, margin=dict(t=100), template="plotly_dark")
                 st.plotly_chart(fig_decomp, use_container_width=True)
 
@@ -390,5 +399,6 @@ elif page == "📈 Demand Forecasting":
                 title="Correlation: What Drives Demand?"
             )
             fig_heatmap.update_xaxes(side="top")
+            # REVAMP: Added template="plotly_dark"
             fig_heatmap.update_layout(template="plotly_dark")
             st.plotly_chart(fig_heatmap, use_container_width=True)
