@@ -5,6 +5,7 @@
 ![Pandas](https://img.shields.io/badge/Pandas-Data%20Wrangling-150458?logo=pandas&logoColor=white)
 ![Plotly](https://img.shields.io/badge/Plotly-Visuals-3F4F75?logo=plotly&logoColor=white)
 ![Statsmodels](https://img.shields.io/badge/Statsmodels-Time%20Series-6D6D6D)
+![CI](https://github.com/OsbornNyakaru/ugunja_ml_streamlit/actions/workflows/ci.yml/badge.svg)
 
 A Streamlit analytics dashboard that showcases route optimization ROI, predictive maintenance risk, and LPG demand forecasting for a simulated fleet and distribution network.
 
@@ -17,8 +18,7 @@ A Streamlit analytics dashboard that showcases route optimization ROI, predictiv
 - Predictive maintenance: Scikit-learn Random Forest with feature engineering on mileage, load cycles, and service history; reported ~83% accuracy on held-out test data.
 - Demand forecasting: Pandas pipeline + Scikit-learn Logistic Regression to authenticate cylinder distribution and predict regional LPG shortages.
 
-See `reports/model_evaluation.md` for the current verification status and what is needed to make results reproducible.
-- This repo focuses on visualization of model outputs; training code and experiments are not included here.
+See `reports/model_evaluation.md` for the current verification status and what is needed to make results reproducible. This repo focuses on visualization of model outputs; training code and experiments are not included here.
 
 **Project structure**
 - `app.py` Streamlit entrypoint and app wiring.
@@ -60,9 +60,12 @@ python -m ruff format app.py ugunja_app tests
 python -m ruff check app.py ugunja_app tests --fix
 ```
 
+**Release Notes**
+- 2026-03-15: Modularized the app, added schema validation + tests, added synthetic training assets, and added CI.
+
 **Notes for reviewers**
 - The data is simulated for demo purposes to highlight the product experience.
 - The UI emphasizes ROI, risk visibility, and demand planning outcomes.
-- The app is intentionally single-file for hackathon speed; it can be modularized for production.
+- The app is modularized for clarity; production hardening would include auth, data validation gates, and monitored data pipelines.
 
 If you want a quick technical walkthrough, start with `PROJECT_OVERVIEW.md`.
