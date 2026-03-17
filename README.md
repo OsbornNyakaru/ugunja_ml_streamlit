@@ -1,4 +1,4 @@
-# Smart LPG Logistics & Predictive Maintenance (Ugunja Hackathon)
+# Smart LPG Logistics & Predictive Maintenance (Green Wells Energeis Hackathon: https://green-wells-innovation.devpost.com/) 
 
 ![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)
