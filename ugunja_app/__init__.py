@@ -1,1 +1,0 @@
-"""Ugunja app package."""

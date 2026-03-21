@@ -1,4 +1,14 @@
-streamlit
+numpy
 pandas
+scikit-learn
+scipy
+matplotlib
+seaborn
 plotly
-statsmodels
+folium
+ortools
+joblib
+fastapi
+pydantic
+jupyter
+ipykernel

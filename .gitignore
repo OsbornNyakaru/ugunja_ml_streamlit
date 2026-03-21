@@ -18,6 +18,9 @@ dist/
 .ruff_cache/
 pytest-cache-files-*/
 
+# Jupyter
+.ipynb_checkpoints/
+
 # Streamlit
 .streamlit/
 
@@ -25,3 +28,10 @@ pytest-cache-files-*/
 .DS_Store
 Thumbs.db
 *.log
+
+# Data outputs
+data/processed/
+data/interim/
+data/synthetic/
+reports/figures/
+reports/metrics/
