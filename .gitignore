@@ -20,6 +20,7 @@ pytest-cache-files-*/
 
 # Jupyter
 .ipynb_checkpoints/
+notebooks/models/
 
 # Streamlit
 .streamlit/
